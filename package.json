@@ -1,0 +1,22 @@
+{
+  "name": "@vuevn/cli",
+  "version": "0.0.1",
+  "private": true,
+  "description": "VueVN CLI (work-in-progress): dev/build/verify/create for VueVN projects",
+  "bin": {
+    "vuevn": "./bin/vuevn.js"
+  },
+  "type": "commonjs",
+  "files": [
+    "src",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node ./bin/vuevn.js",
+    "dev": "node ./bin/vuevn.js dev --project .",
+    "build": "node ./bin/vuevn.js build --project .",
+    "verify": "node ./bin/vuevn.js verify --project ."
+  }
+}

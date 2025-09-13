@@ -4,7 +4,7 @@ import { createPinia } from "pinia";
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import App from "@engine/App.vue";
 import "@engine/index.css";
-import { Engine } from "@generate/engine";
+import { Engine } from "@generate/engine/Core";
 import {
   engineState as useEngineState,
   gameState as useGameState,

@@ -13,7 +13,8 @@
       "@locations/*": ["./locations/*"],
       "@global/*": ["./global/*"],
       "@plugins/*": ["./plugins/*"],
-      "@generate/*": ["./generate/*"]
+      "@generate/*": ["./generate/*"],
+      "@vuevn/engine_src/*": ["./node_modules/@vuevn/cli/engine_src/*"]
     }
   },
   "include": ["locations", "global", "plugins"],

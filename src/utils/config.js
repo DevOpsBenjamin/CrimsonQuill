@@ -3,11 +3,10 @@
 const fs = require("fs");
 const path = require("path");
 
-function resolveProjectRoot(inputPath) {
-  const cwd = process.cwd();
-  const projectRoot = path.resolve(cwd, inputPath || ".");
+function resolveProjectRoot() {
+  const projectRoot = process.cwd();
   if (!fs.existsSync(projectRoot) || !fs.statSync(projectRoot).isDirectory()) {
-    throw new Error(`Project path not found or not a directory: ${projectRoot}`);
+    throw new Error(`Current working directory is not a valid project folder: ${projectRoot}`);
   }
   return projectRoot;
 }
@@ -28,13 +27,25 @@ function loadPackageJson(projectRoot) {
   }
 }
 
-function loadConfig(projectRoot) {
+function assertVuevnProject(projectRoot) {
   const pkg = loadPackageJson(projectRoot);
+  if (!pkg || Object.keys(pkg).length === 0) {
+    throw new Error(`[vuevn] No package.json found in ${projectRoot}. Run 'vuevn create <name>' first.`);
+  }
+  if (!pkg.vuevn) {
+    throw new Error(`[vuevn] Missing 'vuevn' field in package.json. Initialize with 'vuevn create <name>' or add { "vuevn": {} }.`);
+  }
+  return pkg;
+}
+
+function loadConfig(projectRoot) {
+  const pkg = assertVuevnProject(projectRoot);
   const name = pkg.name || path.basename(projectRoot);
   const displayName = pkg.displayName || name;
-  const outDir = (pkg.vuevn && pkg.vuevn.outDir) || "generate";
+  // outDir is fixed to 'dist' per design
+  const outDir = "dist";
   const editorEnabled = !(pkg.vuevn && pkg.vuevn.editor === false);
   return { name, displayName, outDir, editor: { enabled: editorEnabled } };
 }
 
-module.exports = { resolveProjectRoot, loadConfig };
+module.exports = { resolveProjectRoot, loadConfig, assertVuevnProject };

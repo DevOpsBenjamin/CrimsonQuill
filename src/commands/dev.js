@@ -6,9 +6,8 @@ const { runGenerate } = require("../generate/index");
 const { startDevServer } = require("../vite/dev");
 
 module.exports = async function dev({ flags }) {
-  const input = flags.project || ".";
   const verbose = !!flags.verbose;
-  const projectRoot = resolveProjectRoot(input);
+  const projectRoot = resolveProjectRoot();
   const config = loadConfig(projectRoot);
   console.log(`[vuevn] dev → project: ${projectRoot}`);
   if (verbose) console.log(`[vuevn] verbose enabled`);

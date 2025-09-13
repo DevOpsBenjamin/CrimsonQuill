@@ -2,14 +2,16 @@
 
 const path = require("path");
 const { createRequire } = require("module");
+const fs = require("fs");
 
 function optional(mod, projectRoot) {
-  // Prefer resolving from the project to pick up its devDeps
+  // Prefer resolving from the CLI package; fallback to the project
+  try { return require(mod); } catch {}
   try {
     const req = createRequire(path.join(projectRoot, "package.json"));
     return req(mod);
   } catch {}
-  try { return require(mod); } catch { return null; }
+  return null;
 }
 
 function editorInjectionPlugin({ title = "VueVN Editor", enabled = true } = {}) {
@@ -19,42 +21,27 @@ function editorInjectionPlugin({ title = "VueVN Editor", enabled = true } = {}) 
       server.middlewares.use(async (req, res, next) => {
         if (!enabled) return next();
         if (req.url === "/" || req.url === "/index.html") {
-          const html = `<!doctype html>
-  <html>
-    <head>
-      <meta charset=\"utf-8\" />
-      <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
-      <title>${title}</title>
-    </head>
-    <body>
-      <div id=\"app\"></div>
-      <script type=\"module\" src=\"/@vuevn/editor-entry.js\"></script>
-    </body>
-  </html>`;
-          res.setHeader("Content-Type", "text/html");
-          res.end(html);
+          const cliRoot = server.config.resolve.alias.find(a => a.find) ? undefined : undefined;
+          // Serve physical HTML from package
+          const pkgRoot = path.resolve(__dirname, "../..");
+          const htmlPath = path.join(pkgRoot, "vite-dev", "index.html");
+          try {
+            const html = fs.readFileSync(htmlPath, "utf8");
+            res.setHeader("Content-Type", "text/html");
+            res.end(html.replace("<title>VueVN Editor</title>", `<title>${title}</title>`));
+          } catch (e) {
+            res.statusCode = 500;
+            res.end(`[vuevn] Failed to load dev index.html: ${e.message}`);
+          }
           return;
         }
         return next();
       });
     },
     resolveId(id) {
-      if (id === "/@vuevn/editor-entry.js") return id;
-    },
-    load(id) {
-      if (id === "/@vuevn/editor-entry.js") {
-        return `
-          import { mountEditor } from '@editor';
-          mountEditor();
-          (async () => {
-            try {
-              await import('@runtime/main.ts');
-              console.log('[vuevn] runtime loaded');
-            } catch (e) {
-              console.warn('[vuevn] no runtime found at @runtime/main.ts');
-            }
-          })();
-        `;
+      if (id === "/@vuevn/dev-entry") {
+        const pkgRoot = path.resolve(__dirname, "../..");
+        return path.join(pkgRoot, "vite-dev", "entry.ts");
       }
     },
   };
@@ -79,20 +66,22 @@ async function startDevServer({ projectRoot, config, noEditor = false }) {
     plugins,
     resolve: {
       alias: {
+        "@generate": path.join(projectRoot, "generate"),
         "@locations": path.join(projectRoot, "locations"),
         "@global": path.join(projectRoot, "global"),
         "@plugins": path.join(projectRoot, "plugins"),
-        "@generate": path.join(projectRoot, "generate"),
         "@project": projectRoot,
-        "@runtime": path.join(projectRoot, "runtime"),
         "@engine": path.join(cliRoot, "engine_src"),
         "@editor": path.join(cliRoot, "editor_src"),
+        "@vuevn/engine_src": path.join(cliRoot, "engine_src"),
+        "@vuevn/editor_src": path.join(cliRoot, "editor_src"),
       },
     },
     server: {
       host: true,
       port: 5173,
       strictPort: false,
+      fs: { allow: [projectRoot, cliRoot] },
     },
   });
 

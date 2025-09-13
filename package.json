@@ -1,6 +1,6 @@
 {
   "name": "@vuevn/cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "description": "VueVN CLI (work-in-progress): dev/build/verify/create for VueVN projects",
   "bin": {
@@ -10,6 +10,11 @@
   "files": [
     "src",
     "bin",
+    "engine_src",
+    "editor_src",
+    "vite-dev",
+    "vite-build",
+    "html",
     "README.md",
     "LICENSE"
   ],
@@ -18,5 +23,14 @@
     "dev": "node ./bin/vuevn.js dev --project .",
     "build": "node ./bin/vuevn.js build --project .",
     "verify": "node ./bin/vuevn.js verify --project ."
+  },
+  "dependencies": {
+    "fast-glob": "^3.3.2",
+    "fs-extra": "^11.2.0",
+    "vite": "^5.0.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vue": "^3.4.0",
+    "pinia": "^2.1.7",
+    "pinia-plugin-persistedstate": "^3.2.0"
   }
 }

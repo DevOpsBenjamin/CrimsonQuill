@@ -10,11 +10,12 @@ function ensureDir(dir) {
 }
 
 function resolveModulePath(mod, projectRoot) {
+  try { return require.resolve(mod); } catch {}
   try {
     const req = createRequire(path.join(projectRoot, "package.json"));
     return req.resolve(mod);
   } catch {}
-  try { return require.resolve(mod); } catch { return null; }
+  return null;
 }
 
 function gameEntryPlugin() {
@@ -48,9 +49,18 @@ async function buildGame({ projectRoot, config, outDir }) {
   }
 
   const cliRoot = path.resolve(__dirname, "../..");
-  const gameHtmlPath = path.join(cliRoot, "html", "game.html");
+  const buildHtmlPath = path.join(cliRoot, "vite-build", "index.html");
 
-  const plugins = [gameEntryPlugin()];
+  const plugins = [
+    {
+      name: 'vuevn-build-entry-resolver',
+      resolveId(id) {
+        if (id === '/@vuevn/build-entry') {
+          return path.join(cliRoot, 'vite-build', 'entry.ts');
+        }
+      },
+    },
+  ];
   if (vuePlugin) plugins.push(vuePlugin());
 
   const outAbs = path.resolve(projectRoot, outDir || "dist");
@@ -60,20 +70,19 @@ async function buildGame({ projectRoot, config, outDir }) {
     plugins,
     resolve: {
       alias: {
-        "@project": projectRoot,
+        "@generate": path.join(projectRoot, "generate"),
+        "@plugins": path.join(projectRoot, "plugins"),
         "@locations": path.join(projectRoot, "locations"),
         "@global": path.join(projectRoot, "global"),
-        "@plugins": path.join(projectRoot, "plugins"),
-        "@generate": path.join(projectRoot, "generate"),
+        "@project": projectRoot,
         "@engine": path.join(cliRoot, "engine_src"),
+        "@vuevn/engine_src": path.join(cliRoot, "engine_src"),
       },
     },
     build: {
       outDir: outAbs,
       emptyOutDir: false,
-      rollupOptions: {
-        input: gameHtmlPath,
-      },
+      rollupOptions: { input: buildHtmlPath },
     },
   });
 }

@@ -1,6 +1,6 @@
 {
   "name": "@vuevn/cli",
-  "version": "0.0.3-dev.2",
+  "version": "0.0.3-dev.3",
   "description": "VueVN CLI (work-in-progress): dev/build/verify/create for VueVN projects",
   "bin": {
     "vuevn": "./bin/vuevn.js"
@@ -25,13 +25,14 @@
     "verify": "node ./bin/vuevn.js verify --project ."
   },
   "peerDependencies": {
-    "vue": "^3.4.0",
-    "vite": "^5.0.0",
     "@vitejs/plugin-vue": "^5.0.0",
     "pinia": "^2.1.7",
-    "pinia-plugin-persistedstate": "^3.2.0"
+    "pinia-plugin-persistedstate": "^3.2.0",
+    "vite": "^5.0.0",
+    "vue": "^3.4.0"
   },
   "dependencies": {
+    "@vuevn/cli": "^0.0.3-dev.2",
     "fast-glob": "^3.3.2",
     "fs-extra": "^11.2.0"
   }

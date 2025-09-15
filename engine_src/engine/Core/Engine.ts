@@ -72,7 +72,7 @@ class Engine {
       w.VueVN = this.gameState.$state;
       
       // Version info for debugging
-      w.VueVN._version = '0.0.3-dev.25';
+      w.VueVN._version = '0.0.3-dev.26';
     }
     Engine.instance = this;
   }

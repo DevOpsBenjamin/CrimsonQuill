@@ -2,15 +2,22 @@
   <Transition name="fade">
     <div
       v-show="engineState.state === EngineStateEnum.MENU"
-      :style="menuBgStyle"
       class="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-80 transition-all duration-500"
       :class="{
         'opacity-100': engineState.state === EngineStateEnum.MENU,
         'opacity-0': engineState.state !== EngineStateEnum.MENU,
       }"
     >
+      <!-- Background image behind the menu content -->
+      <img
+        :src="menuBg"
+        alt="Menu Background"
+        class="absolute inset-0 w-full h-full object-cover"
+        style="z-index: 0;"
+      />
+
       <!-- Main menu panel with responsive height and scroll -->
-      <div class="flex flex-col items-center w-1/3 px-6 max-h-[calc(100%-4rem)] overflow-y-auto">
+      <div class="flex flex-col items-center w-1/3 px-6 max-h-[calc(100%-4rem)] overflow-y-auto relative" style="z-index: 1;">
         <!-- Title section -->
         <div class="mb-6 lg:mb-8 text-center shrink-0">
           <h1 class="font-bold text-white mb-2 tracking-wider" style="font-size: 4cqw;">
@@ -155,11 +162,8 @@ function saveGame() {
   engineState.state = EngineStateEnum.SAVE;
 }
 
-const menuBgStyle = {
-  backgroundImage: "url('global/images/menu/main.png')",
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-};
+// Use explicit <img> for background to align with core Background.vue behavior
+const menuBg = 'global/images/menu/main.png';
 
 // Strongly-typed usage: keep typed ui and translate on demand
 const ui = t.global.ui;

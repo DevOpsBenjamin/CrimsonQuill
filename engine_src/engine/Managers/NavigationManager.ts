@@ -1,4 +1,6 @@
-import { HistoryManager, VNInterruptError, WaitManager } from '@generate/engine';
+import { HistoryManager } from '@generate/engine/Managers';
+import { VNInterruptError } from '@generate/engine/Error';
+import { WaitManager } from '@generate/engine/Core';
 
 export default class NavigationManager {
   private historyManager: HistoryManager;

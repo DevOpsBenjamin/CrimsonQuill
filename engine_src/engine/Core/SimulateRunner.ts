@@ -1,6 +1,7 @@
 import { VNActionEnum } from "@generate/enums"
-import { EventEndError } from "@generate/engine"
+import { EventEndError } from "@generate/engine/Error"
 import type { Text, CustomArgs, EngineAPI, EngineState, GameState, Action,  } from "@generate/types"
+import { normalizeAssetPath, normalizeAssetPaths } from "../Utils/AssetPathHelper"
 
 export default class SimulateRunner implements EngineAPI
 {
@@ -115,14 +116,14 @@ export default class SimulateRunner implements EngineAPI
         if (this.event_ended) {
             throw new EventEndError(this.event_id)
         }
-        this.engineState.background = imagePath;
+        this.engineState.background = normalizeAssetPath(imagePath);
     }
 
     setForeground(imagePaths: string[]): void {
         if (this.event_ended) {
             throw new EventEndError(this.event_id)
         }
-        this.engineState.foreground = [...imagePaths];
+        this.engineState.foreground = normalizeAssetPaths(imagePaths);
     }
 
     addForeground(imagePath: string): void {
@@ -132,17 +133,18 @@ export default class SimulateRunner implements EngineAPI
         if (!this.engineState.foreground) {
             this.engineState.foreground = [];
         }
-        this.engineState.foreground.push(imagePath);
+        this.engineState.foreground.push(normalizeAssetPath(imagePath) || '');
     }
 
     replaceForeground(imagePath: string): void {
         if (this.event_ended) {
             throw new EventEndError(this.event_id)
         }
+        const normalizedPath = normalizeAssetPath(imagePath) || '';
         if (!this.engineState.foreground || this.engineState.foreground.length === 0) {
-            this.engineState.foreground = [imagePath];
+            this.engineState.foreground = [normalizedPath];
         } else {
-            this.engineState.foreground[this.engineState.foreground.length - 1] = imagePath;
+            this.engineState.foreground[this.engineState.foreground.length - 1] = normalizedPath;
         }
     }
 }

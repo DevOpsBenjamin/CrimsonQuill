@@ -1,6 +1,6 @@
 import projectData from '@generate/project';
 import type { GameState, Location, LocationData } from '@generate/types';
-import { LocationLinker } from '@generate/engine';
+import { LocationLinker } from '@generate/engine/Core';
 
 export default class LocationManager {
   locationDataDico: Record<string, LocationData> = {};

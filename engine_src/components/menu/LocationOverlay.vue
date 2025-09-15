@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue';
-import { Engine } from "@generate/engine";
+import { Engine } from "@generate/engine/Core";
 import { gameState as useGameState } from '@generate/stores';
 import type { Location } from '@generate/types';
 

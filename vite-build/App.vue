@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { Main } from '@generate/components';
+import { Main } from '@generate/components/app';
 </script>
 
 <style>
@@ -25,3 +25,4 @@ body {
   overflow: hidden;
 }
 </style>
+

@@ -1,10 +1,10 @@
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
+import { createApp } from "vue";
+import { createPinia } from "pinia";
 // @ts-ignore - no types available
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
-import App from '@editor/App.vue';
-import '@editor/index.css';
-import { Engine } from '@generate/engine';
+import App from "@vuevn/cli/vite-build/App.vue";
+import "@vuevn/cli/vite-build/index.css";
+import { Engine } from "@generate/engine/Core";
 import {
   engineState as useEngineState,
   gameState as useGameState,
@@ -24,4 +24,5 @@ const tempGameRoot = document.createElement('div');
 const engine = new Engine(gameState, engineState, tempGameRoot);
 console.debug(`Init engine at location: ${engine.gameState.location_id}`);
 
-app.mount('#app');
+app.mount("#app");
+

@@ -1,4 +1,7 @@
-import { SimulateRunner, HistoryManager, NavigationManager, VNInterruptError, EventEndError, Config, DialogHelper } from '@generate/engine';
+import { SimulateRunner, Config } from '@generate/engine/Core';
+import { HistoryManager, NavigationManager } from '@generate/engine/Managers';
+import { VNInterruptError, EventEndError } from '@generate/engine/Error';
+import { DialogHelper } from '@generate/engine/Utils';
 import { VNActionEnum } from '@generate/enums';
 import type { Action, EngineState, GameState, VNEvent, EngineAPI } from '@generate/types';
 

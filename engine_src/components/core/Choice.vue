@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue';
-import { Engine } from "@generate/engine";
+import { Engine } from "@generate/engine/Core";
 import { engineState as useEngineState } from "@generate/stores";
 import LanguageManager from '@engine/engine/Managers/LanguageManager';
 const engineState = useEngineState();

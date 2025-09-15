@@ -1,20 +1,20 @@
+import { EngineSave, ActionExecutor } from '@generate/engine/Core';
+import { VNInterruptError } from '@generate/engine/Error';
 import {
-  EngineSave,
-  VNInterruptError,
   HistoryManager,
   EventManager,
   InputManager,
-  ActionExecutor,
   NavigationManager,
   LocationManager,
   ActionManager,
-} from '@generate/engine';
+} from '@generate/engine/Managers';
 import { EngineStateEnum } from '@generate/enums';
 import type {
   VNEvent,
   GameStateStore,
   EngineStateStore,
 } from '@generate/types';
+import { normalizeAssetPath } from '../Utils/AssetPathHelper';
 
 class Engine {
   // #region DEFINITION
@@ -66,10 +66,13 @@ class Engine {
       console.warn('[Engine] Failed to pre-initialize events cache:', e);
     }
 
-    // Initialize window reference
+    // Initialize window reference (like SugarCube's setup)
     if (typeof window !== 'undefined') {
       const w = window as any;
       w.VueVN = this.gameState.$state;
+      
+      // Version info for debugging
+      w.VueVN._version = '0.0.3-dev.25';
     }
     Engine.instance = this;
   }
@@ -209,7 +212,7 @@ class Engine {
       this.locationManager.updateLocations(this.gameState.location_id);
 
       // Set base background
-      this.engineState.background = currentLocation.baseBackground;
+      this.engineState.background = normalizeAssetPath(currentLocation.baseBackground);
 
       // Check for time-based background overrides
       if (
@@ -218,7 +221,7 @@ class Engine {
       ) {
         for (const timeBackground of currentLocation.timeBackgrounds) {
           if (timeBackground.check(this.gameState)) {
-            this.engineState.background = timeBackground.value;
+            this.engineState.background = normalizeAssetPath(timeBackground.value);
             break; // Use first matching time background
           }
         }

@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Game } from '@generate/components';
+import { Game } from '@generate/components/app';
 
 const wrapperStyle = computed(() => ({
   '--aspect-ratio': '2 / 1',

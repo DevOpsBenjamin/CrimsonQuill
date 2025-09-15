@@ -10,7 +10,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { SaveLoadMenu, SettingsMenu, MainMenu, Engine, Loading } from '@generate/components';
+import { SaveLoadMenu, SettingsMenu, MainMenu } from '@generate/components/menu';
+import { Engine, Loading } from '@generate/components/app';
 import { Engine as EngineCore } from '@generate/engine';
 
 const gameRoot = ref<HTMLElement | null>(null);

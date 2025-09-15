@@ -79,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import {LanguageSelector, AudioSettings, TextSettings, GameplaySettings} from '@generate/components'
+import {LanguageSelector, AudioSettings, TextSettings, GameplaySettings} from '@generate/components/settings/components'
 import { engineState as useEngineState } from "@generate/stores";
 import { EngineStateEnum } from '@generate/enums';
 import t from '@generate/texts';

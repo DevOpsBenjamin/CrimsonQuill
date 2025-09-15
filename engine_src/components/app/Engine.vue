@@ -16,15 +16,17 @@
 <script setup lang="ts">
 import {
   Background,
+  Choice,
+  Dialogue,
+  Drawing,
+  Foreground
+} from '@generate/components/core';
+import {
   LocationOverlay,
   ActionOverlay,
   TopBarOverlay,
-  Drawing,
-  Foreground,
-  Dialogue,
-  Choice,
   Custom
-} from '@generate/components';
+} from '@generate/components/menu';
 </script>
 
 <style scoped>

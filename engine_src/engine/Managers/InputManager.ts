@@ -1,6 +1,6 @@
 import { EngineStateEnum } from '@generate/enums';
 import type { EngineState, GameState } from '@generate/types';
-import { NavigationManager } from '@generate/engine';
+import { NavigationManager } from '@generate/engine/Managers';
 
 type KeyboardLayout = 'qwerty' | 'azerty' | 'unknown';
 
@@ -53,7 +53,7 @@ export default class InputManager {
       return;
     }
 
-    if (e.key == 'Escape') {
+    if (e.key === 'Escape') {
       this.toggleMenu();
       return;
     }

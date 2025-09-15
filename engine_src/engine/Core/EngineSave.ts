@@ -1,7 +1,7 @@
 import projectData from '@generate/project';
 import type { EngineState, SaveData } from '@generate/types'
 import { EngineStateEnum } from '@generate/enums'
-import type { Engine } from '@generate/engine';
+import type { Engine } from '@generate/engine/Core';
 
 export const startNewGame = async (engine: Engine): Promise<void> => {
   engine.engineState.state = EngineStateEnum.LOADING;

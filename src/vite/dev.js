@@ -5,7 +5,14 @@ const { createRequire } = require("module");
 const fs = require("fs");
 
 function optional(mod, projectRoot) {
-  // Prefer resolving from the CLI package; fallback to the project
+  // Prefer resolving from the installed CLI package inside the project (handles file: symlink)
+  try {
+    const reqFromProject = createRequire(path.join(projectRoot, 'package.json'));
+    const cliPkg = reqFromProject.resolve('@vuevn/cli/package.json');
+    const reqCli = createRequire(cliPkg);
+    return reqCli(mod);
+  } catch {}
+  // Fallback to normal resolution
   try { return require(mod); } catch {}
   try {
     const req = createRequire(path.join(projectRoot, "package.json"));
@@ -39,9 +46,9 @@ function editorInjectionPlugin({ title = "VueVN Editor", enabled = true } = {}) 
       });
     },
     resolveId(id) {
-      if (id === "/@vuevn/dev-entry") {
+      if (id === "/@vuevn/dev-main") {
         const pkgRoot = path.resolve(__dirname, "../..");
-        return path.join(pkgRoot, "vite-dev", "entry.ts");
+        return path.join(pkgRoot, "vite-dev", "main.ts");
       }
     },
   };
@@ -88,6 +95,63 @@ async function startDevServer({ projectRoot, config, noEditor = false }) {
   await server.listen();
   const info = server.config.server;
   console.log(`[vuevn] Vite dev server running at: http://localhost:${info.port}`);
+
+  // Setup text/config watchers to regenerate on change (hot reload)
+  try {
+    const { runGenerateTexts, runGenerate, runGenerateEngine, runGenerateProject } = require('../generate/index');
+    const w = server.watcher;
+    const toProj = (p) => path.join(projectRoot, p);
+    const textGlobs = [
+      toProj('global/texts/**/*.ts'),
+      toProj('locations/**/texts/**/*.ts'),
+    ];
+    const cfgFile = toProj('config.ts');
+    const watchRoots = [toProj('global'), toProj('locations'), toProj('plugins')];
+
+    // Debounce helper
+    let pending = null;
+    function schedule(fn, delay = 80) {
+      if (pending) clearTimeout(pending);
+      pending = setTimeout(async () => {
+        pending = null;
+        try {
+          await fn();
+          server.ws.send({ type: 'full-reload' });
+        } catch (e) {
+          console.error('[vuevn] watcher error:', e && e.message ? e.message : e);
+        }
+      }, delay);
+    }
+
+    w.add(textGlobs);
+    w.add(watchRoots);
+    const onText = () => schedule(() => runGenerateTexts({ projectRoot, verbose: false }), 80);
+    const isTextFile = (p) => p.endsWith('.ts') && p.includes(`${path.sep}texts${path.sep}`);
+    const isCodeFile = (p) => /\.(ts|vue)$/i.test(p);
+    const isUnderAny = (p, roots) => roots.some(r => p.startsWith(r + path.sep) || p === r);
+    const onAny = (p) => {
+      if (isTextFile(p)) return onText();
+      if (!isCodeFile(p)) return;
+      if (!isUnderAny(p, watchRoots)) return;
+      // Split by area: plugins -> engine overlay; global/locations (non-text) -> project structure
+      if (p.startsWith(toProj('plugins') + path.sep)) {
+        return schedule(() => runGenerateEngine({ projectRoot, verbose: false }), 120);
+      }
+      if (p.startsWith(toProj('global') + path.sep) || p.startsWith(toProj('locations') + path.sep)) {
+        return schedule(() => runGenerateProject({ projectRoot, verbose: false }), 120);
+      }
+    };
+    w.on('add', onAny);
+    w.on('change', onAny);
+    w.on('unlink', onAny);
+
+    // If config.ts changes, regenerate everything (languages/plugins may change)
+    w.add(cfgFile);
+    const onConfig = () => schedule(() => runGenerate({ projectRoot, verbose: false }), 150);
+    w.on('change', (p) => { if (p === cfgFile) onConfig(); });
+  } catch (e) {
+    console.warn('[vuevn] Unable to initialize file watchers for texts/config:', e && e.message ? e.message : e);
+  }
 }
 
 module.exports = { startDevServer };

@@ -1,6 +1,6 @@
 {
   "name": "@vuevn/cli",
-  "version": "0.0.3-dev.1",
+  "version": "0.0.3-dev.2",
   "description": "VueVN CLI (work-in-progress): dev/build/verify/create for VueVN projects",
   "bin": {
     "vuevn": "./bin/vuevn.js"

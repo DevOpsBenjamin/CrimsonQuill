@@ -1,6 +1,6 @@
 {
   "name": "@vuevn/cli",
-  "version": "0.0.3-dev.3",
+  "version": "0.0.3-dev.4",
   "description": "VueVN CLI (work-in-progress): dev/build/verify/create for VueVN projects",
   "bin": {
     "vuevn": "./bin/vuevn.js"
@@ -32,8 +32,8 @@
     "vue": "^3.4.0"
   },
   "dependencies": {
-    "@vuevn/cli": "^0.0.3-dev.2",
     "fast-glob": "^3.3.2",
-    "fs-extra": "^11.2.0"
+    "fs-extra": "^11.2.0",
+    "vite-plugin-singlefile": "^2.0.0"
   }
 }

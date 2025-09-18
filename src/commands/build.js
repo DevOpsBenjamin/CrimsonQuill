@@ -4,11 +4,13 @@ const fs = require("fs");
 const path = require("path");
 const { resolveProjectRoot, loadConfig } = require("../utils/config");
 const { runGenerateEngine, runGenerateProject, runGenerateTexts, extractLanguagesFromConfig } = require("../generate/index");
+const { runVerify } = require("../verify");
 const { buildGame } = require("../vite/build");
 
 module.exports = async function build({ args = [], flags }) {
   // Support both --verbose and trailing '/verbose' arg (compat mimic)
   const verbose = !!flags.verbose || (args && args.includes('/verbose'));
+  const ignoreTranslations = !!flags["ignore-translations"] || (args && args.includes('/ignore-translations'));
   const projectRoot = resolveProjectRoot();
   const cfg = loadConfig(projectRoot);
   const projectId = path.basename(projectRoot);
@@ -43,12 +45,9 @@ module.exports = async function build({ args = [], flags }) {
       // Counts and overrides/additions are now printed during generation (from the trees), not here.
     }
 
-    // Optional verify step mimic
-    if (verbose) {
-      log(`${symbols.verify} Verifying project quality... (verbose)`);
-    } else {
-      log(`${symbols.verify} Verifying project quality... for base build`);
-    }
+    // Verify (TS + i18n)
+    log(`${symbols.verify} Verifying project quality...${verbose ? ' (verbose)' : ''}`);
+    await runVerify({ projectRoot, ignoreTranslations, verbose, ensureGenerate: false });
 
     await buildGame({ projectRoot, config: cfg, outDir: "dist" });
     log(`${symbols.done} Build completed in ./dist`);

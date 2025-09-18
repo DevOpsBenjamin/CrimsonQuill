@@ -5,11 +5,12 @@ import autoprefixer from 'autoprefixer';
 import { createVueVNAliasPlugin } from '../src/plugins/vuevn-alias.js';
 import path from 'path';
 import fs from 'fs';
+import { createRequire } from 'module';
 
 export default function createBuildConfig({ projectRoot, cliRoot, outDir }) {
   const sourceHtml = path.join(cliRoot, 'vite-build', 'index.html');
   const outAbs = path.resolve(projectRoot, outDir || 'dist');
-  
+
   // Read project package.json for name and version
   let projectName = 'game';
   let projectVersion = '1.0.0';
@@ -29,6 +30,7 @@ export default function createBuildConfig({ projectRoot, cliRoot, outDir }) {
     path.join(projectRoot, 'generate/**/*.{vue,js,ts,jsx,tsx}'),
     path.join(projectRoot, 'locations/**/*.{vue,js,ts,jsx,tsx}'),
     path.join(projectRoot, 'global/**/*.{vue,js,ts,jsx,tsx}'),
+    path.join(projectRoot, 'plugins/**/*.{vue,js,ts,jsx,tsx}'),
     path.join(projectRoot, 'shared/**/*.{vue,js,ts,jsx,tsx}'),
     // Include the source HTML
     sourceHtml,
@@ -38,7 +40,7 @@ export default function createBuildConfig({ projectRoot, cliRoot, outDir }) {
   return {
     root: projectRoot,
     base: './',
-    
+
     plugins: [
       vue(),
       viteSingleFile(),
@@ -67,10 +69,14 @@ export default function createBuildConfig({ projectRoot, cliRoot, outDir }) {
     css: {
       postcss: {
         plugins: [
-          tailwindcss({
-            config: path.join(__dirname, 'tailwind.config.js'),
-            content: tailwindContent
-          }),
+          (() => {
+            // Load Tailwind config and override content to avoid scanning node_modules
+            const require = createRequire(import.meta.url);
+            let baseCfg = {};
+            try { baseCfg = require(path.join(__dirname, 'tailwind.config.js')); } catch { baseCfg = {}; }
+            const merged = { ...(baseCfg?.default || baseCfg), content: tailwindContent };
+            return tailwindcss({ config: merged });
+          })(),
           autoprefixer()
         ],
       },

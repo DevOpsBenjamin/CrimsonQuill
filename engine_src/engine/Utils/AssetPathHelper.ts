@@ -4,12 +4,12 @@
  */
 export function normalizeAssetPath(path: string | null): string | null {
   if (!path) return path;
-  
+
   // If path starts with /, convert to ./
   if (path.startsWith('/')) {
     return '.' + path;
   }
-  
+
   return path;
 }
 
@@ -19,3 +19,9 @@ export function normalizeAssetPath(path: string | null): string | null {
 export function normalizeAssetPaths(paths: string[]): string[] {
   return paths.map(path => normalizeAssetPath(path) || '');
 }
+
+// Default export for generated code compatibility
+export default {
+  normalizeAssetPath,
+  normalizeAssetPaths
+};

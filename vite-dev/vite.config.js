@@ -3,7 +3,10 @@ import path from 'path';
 import fs from 'fs';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
+import { createRequire } from 'module';
 import { createVueVNAliasPlugin } from '../src/plugins/vuevn-alias.js';
+import { createFileApiPlugin } from '../src/plugins/file-api.js';
+import { createGenerateWatchPlugin } from '../src/plugins/generate-watch.js';
 
 // Dev config mirroring build essentials. It resolves aliases and Tailwind similarly,
 // but uses vite-dev/index.html and dev entry points.
@@ -12,50 +15,144 @@ export default function createDevConfig() {
   // Infer paths relative to the installed package
   const cliRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
   const projectRoot = process.cwd();
-
-  const sourceHtml = path.join(cliRoot, 'vite-dev', 'index.html');
+  const devRoot = path.join(cliRoot, 'vite-dev');
 
   const tailwindContent = [
+    // Include dev and build templates inside the CLI package
+    path.join(cliRoot, 'vite-dev/**/*.{vue,js,ts,jsx,tsx,html}'),
     path.join(cliRoot, 'vite-build/**/*.{vue,js,ts,jsx,tsx,html}'),
+    // Engine/editor sources shipped with the CLI
     path.join(cliRoot, 'engine_src/**/*.{vue,js,ts,jsx,tsx}'),
+    path.join(cliRoot, 'editor_src/**/*.{vue,js,ts,jsx,tsx}'),
+    // Project sources
     path.join(projectRoot, 'generate/**/*.{vue,js,ts,jsx,tsx}'),
     path.join(projectRoot, 'locations/**/*.{vue,js,ts,jsx,tsx}'),
     path.join(projectRoot, 'global/**/*.{vue,js,ts,jsx,tsx}'),
+    path.join(projectRoot, 'plugins/**/*.{vue,js,ts,jsx,tsx}'),
     path.join(projectRoot, 'shared/**/*.{vue,js,ts,jsx,tsx}'),
-    sourceHtml,
+    // Dev HTML entry
+    path.join(devRoot, 'index.html'),
   ];
 
   return {
-    root: projectRoot,
+    // Serve the CLI's dev folder as the root (so / serves vite-dev/index.html)
+    root: devRoot,
     base: './',
 
     plugins: [
       vue(),
       createVueVNAliasPlugin({ projectRoot, cliRoot }),
+      createFileApiPlugin({ projectRoot }),
+      // Watch project sources and regenerate selectively (@generate), no forced reload
+      createGenerateWatchPlugin({ projectRoot }),
+      // Serve project assets in dev to mirror build output structure
+      {
+        name: 'vuevn-static-assets',
+        configureServer(server) {
+          const locationsRoot = path.join(projectRoot, 'locations');
+          const globalRoot = path.join(projectRoot, 'global');
+
+          const mime = (p) => {
+            const ext = (p && path.extname(p).toLowerCase()) || '';
+            switch (ext) {
+              case '.png': return 'image/png';
+              case '.jpg':
+              case '.jpeg': return 'image/jpeg';
+              case '.gif': return 'image/gif';
+              case '.webp': return 'image/webp';
+              case '.svg': return 'image/svg+xml';
+              case '.mp3': return 'audio/mpeg';
+              case '.wav': return 'audio/wav';
+              case '.ogg': return 'audio/ogg';
+              case '.mp4': return 'video/mp4';
+              case '.webm': return 'video/webm';
+              case '.json': return 'application/json';
+              case '.txt': return 'text/plain; charset=utf-8';
+              default: return 'application/octet-stream';
+            }
+          };
+
+          server.middlewares.use((req, res, next) => {
+            try {
+              const url = new URL(req.url, 'http://localhost');
+              const p = url.pathname;
+
+              // 1) /global/* → projectRoot/global/*
+              if (p.startsWith('/global/')) {
+                const filePath = path.join(projectRoot, p);
+                if (filePath.startsWith(globalRoot) && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+                  res.setHeader('Content-Type', mime(filePath));
+                  res.setHeader('Cache-Control', 'no-cache');
+                  fs.createReadStream(filePath).pipe(res);
+                  return;
+                }
+              }
+
+              // 2) /locations/* → projectRoot/locations/* (support AssetManager paths)
+              if (p.startsWith('/locations/')) {
+                const filePath = path.join(projectRoot, p);
+                if (filePath.startsWith(locationsRoot) && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+                  res.setHeader('Content-Type', mime(filePath));
+                  res.setHeader('Cache-Control', 'no-cache');
+                  fs.createReadStream(filePath).pipe(res);
+                  return;
+                }
+              }
+
+              // 3) /:location/* → projectRoot/locations/:location/*
+              const segs = p.split('/').filter(Boolean);
+              if (segs.length >= 2) {
+                const [first, ...rest] = segs;
+                const candidate = path.join(locationsRoot, first, ...rest);
+                if (candidate.startsWith(locationsRoot) && fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+                  res.setHeader('Content-Type', mime(candidate));
+                  res.setHeader('Cache-Control', 'no-cache');
+                  fs.createReadStream(candidate).pipe(res);
+                  return;
+                }
+              }
+            } catch { /* ignore */ }
+            next();
+          });
+        }
+      },
     ],
 
-    resolve: {
-      alias: {
-        // Ensure project deps are used
-        'vue': path.join(projectRoot, 'node_modules', 'vue'),
-        'pinia': path.join(projectRoot, 'node_modules', 'pinia'),
-        'pinia-plugin-persistedstate': path.join(projectRoot, 'node_modules', 'pinia-plugin-persistedstate'),
-      }
-    },
+    // Aliases for project/engine/editor are provided by createVueVNAliasPlugin
 
     css: {
       postcss: {
         plugins: [
-          tailwindcss({
-            // Prefer vite-dev/tailwind; falls back to vite-build/tailwind
-            config: fs.existsSync(path.join(cliRoot, 'vite-dev', 'tailwind.config.js'))
+          (() => {
+            // Load Tailwind config as object and override content to avoid scanning node_modules
+            const require = createRequire(import.meta.url);
+            const cfgPath = fs.existsSync(path.join(cliRoot, 'vite-dev', 'tailwind.config.js'))
               ? path.join(cliRoot, 'vite-dev', 'tailwind.config.js')
-              : path.join(cliRoot, 'vite-build', 'tailwind.config.js'),
-            content: tailwindContent,
-          }),
+              : path.join(cliRoot, 'vite-build', 'tailwind.config.js');
+            let baseCfg = {};
+            try { baseCfg = require(cfgPath); } catch { baseCfg = {}; }
+            const merged = { ...(baseCfg?.default || baseCfg), content: tailwindContent };
+            return tailwindcss({ config: merged });
+          })(),
           autoprefixer(),
         ],
       },
+    },
+
+    optimizeDeps: {
+      // Treat project/engine/editor sources as first-class modules (no prebundle)
+      exclude: [
+        '@generate',
+        '@project',
+        '@plugins',
+        '@locations',
+        '@global',
+        '@engine',
+        '@editor',
+        '@vuevn/cli',
+        '@vuevn/engine_src',
+        '@vuevn/editor_src',
+      ],
     },
 
     server: {
@@ -65,14 +162,6 @@ export default function createDevConfig() {
       fs: { allow: [projectRoot, cliRoot] },
     },
 
-    build: {
-      // Dev config won’t be used for production build; placeholder
-      outDir: path.join(projectRoot, 'dist-dev'),
-      emptyOutDir: false,
-      rollupOptions: {
-        input: { index: sourceHtml },
-      },
-    },
+    // No special build config; this file is for dev/serve.
   };
 }
-

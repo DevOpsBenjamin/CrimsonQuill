@@ -28,8 +28,6 @@ Thumbs.db
 *.temp
 
 # Generated files in projects
-**/generate/
-**/index.html
 
 # Logs
 *.log

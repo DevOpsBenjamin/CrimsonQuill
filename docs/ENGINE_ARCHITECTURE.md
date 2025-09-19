@@ -1,4 +1,4 @@
-Engine Architecture — @vuevn/cli
+Engine Architecture — @crimsonquill/cli
 
 Purpose
 - Technical overview of the runtime engine as packaged inside the CLI. Focuses on responsibilities, data flow, override model, and stability contracts.
@@ -47,7 +47,7 @@ Override & Plugin Model
 - Generated import indices choose the effective source for each symbol (priority):
   - local plugin file (project `plugins/`)
   - npm plugin from `config.ts` (config order)
-  - engine default (`@vuevn/engine_src`)
+  - engine default (`@crimsonquill/engine_src`)
 - No engine file should import `@engine`/`@project` directly for runtime; use `@generate` so overrides apply.
 - Types under `types/` are re‑exported type‑only to avoid bundling duplicate runtime values.
 
@@ -78,4 +78,3 @@ Planned Improvements
 - Conflict diagnostics during generate (which symbol/file is overridden by which plugin and in what order).
 - Verify/i18n integration into CLI build pipeline with blocking/fallback flag.
 - Editor integration: one‑click scaffolding via File API endpoints and templates.
-

@@ -7,7 +7,6 @@
   "scripts": {
     "dev": "cq dev",
     "build": "cq build",
-    "verify": "cq verify"
   },
   "vuevn": {},
   "dependencies": {},

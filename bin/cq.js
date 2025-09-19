@@ -1,34 +1,25 @@
 #!/usr/bin/env node
-"use strict";
 
-const { parseArgs } = require("../src/utils/parseArgs");
-
-const commands = {
-  help: require("../src/commands/help"),
-  dev: require("../src/commands/dev"),
-  build: require("../src/commands/build"),
-  verify: require("../src/commands/verify"),
-  create: require("../src/commands/create"),
-  version: require("../src/commands/version"),
+const loaders = {
+  dev: () => import('../src/commands/dev.js'),
+  build: () => import('../src/commands/build.js'),
 };
 
-function main() {
+(async () => {
   const argv = process.argv.slice(2);
-  const { cmd, args, flags } = parseArgs(argv);
-
-  const command = cmd || (flags.version ? "version" : null) || "help";
-
-  if (!commands[command]) {
-    console.error(`Unknown command: ${command}`);
-    return commands.help({ args, flags });
+  const cmd = (argv[0] && !argv[0].startsWith('-')) ? argv.shift() : 'build'; // défaut: build
+  const loader = map[cmd];
+  if (!loader) {
+    console.error(`[cq] Unknown command: ${cmd}`);
+    process.exit(1);
+    return;
   }
-
-  return Promise.resolve(commands[command]({ args, flags }))
-    .catch((err) => {
-      console.error("\n[cq] Error:", err && err.stack ? err.stack : err);
-      process.exitCode = 1;
-    });
-}
-
-main();
-
+  try {
+    const mod = await loader();
+    const run = mod.default ?? mod.run;
+    await Promise.resolve(run({ args: argv }));
+  } catch (err) {
+    console.error('\n[cq] Error:', err?.stack || err);
+    process.exitCode = 1;
+  }
+})();

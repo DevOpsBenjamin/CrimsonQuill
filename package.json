@@ -1,44 +1,40 @@
 {
   "name": "crimsonquill",
-  "version": "0.0.1-dev.1758315777",
+  "version": "0.0.1-dev.1758321973",
   "publishConfig": {
     "tag": "dev"
   },
-  "description": "VueVN CLI (work-in-progress): dev/build/verify/create for VueVN projects",
+  "description": "CrimsonQuill WIP",
   "bin": {
     "cq": "./bin/cq.js"
   },
-  "type": "commonjs",
+  "type": "module",
   "files": [
     "src",
     "bin",
-    "engine_src",
-    "editor_src",
-    "vite-dev",
-    "vite-build",
-    "html",
-    "templates",
     "README.md",
     "LICENSE"
   ],
-  "scripts": {
-    "start": "node ./bin/cq.js",
-    "dev": "node ./bin/cq.js dev --project .",
-    "build": "node ./bin/cq.js build --project .",
-    "verify": "node ./bin/cq.js verify --project ."
+  "engines": {
+    "node": ">=18.18"
   },
   "peerDependencies": {
-    "@vitejs/plugin-vue": "^5.0.0",
+    "vue": "^3.4.0",
     "pinia": "^2.1.7",
-    "pinia-plugin-persistedstate": "^3.2.0",
-    "vite": "^5.0.0",
-    "vue": "^3.4.0"
+    "pinia-plugin-persistedstate": "^3.2.0"
   },
   "dependencies": {
-    "fast-glob": "^3.3.2",
-    "fs-extra": "^11.2.0",
+    "vite": "^5.0.0",
+    "@vitejs/plugin-vue": "^5.0.0",
     "vite-plugin-singlefile": "^2.0.0",
     "tailwindcss": "^3.4.0",
-    "autoprefixer": "^10.4.16"
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.0",
+    "fast-glob": "^3.3.2",
+    "fs-extra": "^11.2.0"
+  },
+  "scripts": {
+    "dev": "node ./bin/cq.js dev",
+    "build": "node ./bin/cq.js"
   }
 }

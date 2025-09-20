@@ -5,6 +5,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 const isTS = (ext) => (ext || '').toLowerCase() === '.ts';
 const listDirs = (node) => node?.dirs ? Object.keys(node.dirs) : [];
 const listFiles = (node) => Array.isArray(node?.files) ? node.files : [];
+const joinImportPath = (...segments) => segments.filter(Boolean).join('/');
 
 async function writeTextFile(dir, name, content) {
   await mkdir(dir, { recursive: true });
@@ -14,7 +15,7 @@ async function writeTextFile(dir, name, content) {
 /**
  * Écrit un index.ts par dossier (récursif).
  * - Fichiers TS uniquement
- * - list = { <fileName>: module, <subdir>: defaultExportDeSubdir }
+ * - list = { <fileName>: module, sub: { <subdir>: defaultExportDeSubdir } }
  * @param {object} opts
  *  - node        : nœud d’arbre pour CE dossier
  *  - outDir      : dossier de sortie (dans generate/…)
@@ -31,7 +32,7 @@ export async function writeRecursiveIndex({ node, outDir, sourceAlias, importBas
       node: node.dirs[sub],
       outDir: join(outDir, sub),
       sourceAlias,
-      importBase: `${importBase}/${sub}`,
+      importBase: importBase ? `${importBase}/${sub}` : sub,
     });
   }
 
@@ -42,12 +43,14 @@ export async function writeRecursiveIndex({ node, outDir, sourceAlias, importBas
 
   const importLines = [];
   const listLines = [];
+  const subLines = [];
 
   // a) fichiers
   files.forEach((f, i) => {
     const v = `f${i}`;
     const rel = f.name; // sans extension
-    importLines.push(`import ${v} from '${sourceAlias}/${importBase}/${rel}';`);
+    const importPath = joinImportPath(sourceAlias, importBase, rel);
+    importLines.push(`import ${v} from '${importPath}';`);
     listLines.push(`  "${rel}": ${v}`);
   });
 
@@ -55,15 +58,24 @@ export async function writeRecursiveIndex({ node, outDir, sourceAlias, importBas
   subdirs.forEach((sub, i) => {
     const id = `d${i}`;
     importLines.push(`import ${id} from './${sub}/index.js';`);
-    listLines.push(`  "${sub}": ${id}`);
+    subLines.push(`    "${sub}": ${id}`);
   });
 
+  const target = importBase || '.';
+  const sections = [];
+  if (listLines.length) {
+    sections.push(listLines.join(',\n'));
+  }
+  if (subLines.length) {
+    sections.push(`  sub: {\n${subLines.join(',\n')}\n  }`);
+  }
+  const listBlock = sections.join(',\n');
   const content =
-    `// Generated index for: ${importBase}
+    `// Generated index for: ${target}
 ${importLines.join('\n')}
 
 export const list = {
-${listLines.join(',\n')}
+${listBlock}
 } as const;
 
 export default list;

@@ -8,7 +8,7 @@ const loaders = {
 (async () => {
   const argv = process.argv.slice(2);
   const cmd = (argv[0] && !argv[0].startsWith('-')) ? argv.shift() : 'build'; // défaut: build
-  const loader = map[cmd];
+  const loader = loaders[cmd];
   if (!loader) {
     console.error(`[cq] Unknown command: ${cmd}`);
     process.exit(1);

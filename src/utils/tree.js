@@ -5,6 +5,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 const isTS = (ext) => (ext || '').toLowerCase() === '.ts';
 const listDirs = (node) => node?.dirs ? Object.keys(node.dirs) : [];
 const listFiles = (node) => Array.isArray(node?.files) ? node.files : [];
+const joinImportPath = (...segments) => segments.filter(Boolean).join('/');
 
 async function writeTextFile(dir, name, content) {
   await mkdir(dir, { recursive: true });
@@ -31,7 +32,7 @@ export async function writeRecursiveIndex({ node, outDir, sourceAlias, importBas
       node: node.dirs[sub],
       outDir: join(outDir, sub),
       sourceAlias,
-      importBase: `${importBase}/${sub}`,
+      importBase: importBase ? `${importBase}/${sub}` : sub,
     });
   }
 
@@ -47,7 +48,8 @@ export async function writeRecursiveIndex({ node, outDir, sourceAlias, importBas
   files.forEach((f, i) => {
     const v = `f${i}`;
     const rel = f.name; // sans extension
-    importLines.push(`import ${v} from '${sourceAlias}/${importBase}/${rel}';`);
+    const importPath = joinImportPath(sourceAlias, importBase, rel);
+    importLines.push(`import ${v} from '${importPath}';`);
     listLines.push(`  "${rel}": ${v}`);
   });
 
@@ -58,8 +60,9 @@ export async function writeRecursiveIndex({ node, outDir, sourceAlias, importBas
     listLines.push(`  "${sub}": ${id}`);
   });
 
+  const target = importBase || '.';
   const content =
-    `// Generated index for: ${importBase}
+    `// Generated index for: ${target}
 ${importLines.join('\n')}
 
 export const list = {

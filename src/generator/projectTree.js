@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { symbols } from '../utils/log.js';
-import { writeLocationKind, writeGlobalKind } from '../utils/projectKind.js';
+import { writeRecursiveIndex } from '../utils/tree.js';
 
 const PROJECT_KINDS = ['actions', 'events'];
 

@@ -1,1 +1,1 @@
-export { ProjectGenerator } from './project-generator.js';
+export { ProjectGenerator } from './projectGenerator.js';

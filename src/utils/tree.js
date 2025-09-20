@@ -1,54 +1,73 @@
-// utils/treeUtils.js (ESM)
+// utils/tree.js (ESM) — TS UNIQUEMENT
 import { join } from 'node:path';
-import { mkdir, writeFile as fsWriteFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 
-export const isTS = (ext) => (ext || '').toLowerCase() === '.ts';
+const isTS = (ext) => (ext || '').toLowerCase() === '.ts';
+const listDirs = (node) => node?.dirs ? Object.keys(node.dirs) : [];
+const listFiles = (node) => Array.isArray(node?.files) ? node.files : [];
 
-export function getDir(node, segs = []) {
-  let cur = node;
-  for (const s of segs) {
-    if (!cur?.dirs) return null;
-    cur = cur.dirs[s];
-  }
-  return cur || null;
-}
-
-export function listDirs(node) {
-  return node?.dirs ? Object.keys(node.dirs) : [];
-}
-
-export function listFiles(node) {
-  return Array.isArray(node?.files) ? node.files : [];
-}
-
-// Récursif: retourne les chemins internes SANS extension (ex "a/b/c")
-export function collectTsRelPaths(node, prefix = '') {
-  if (!node) return [];
-  const out = [];
-  for (const f of listFiles(node)) {
-    if (isTS(f.ext)) out.push(prefix ? `${prefix}/${f.name}` : f.name);
-  }
-  for (const [seg, child] of Object.entries(node.dirs || {})) {
-    const next = prefix ? `${prefix}/${seg}` : seg;
-    out.push(...collectTsRelPaths(child, next));
-  }
-  return out.sort();
-}
-
-// Existence d’un fichier exact (relatif à une racine donnée du tree)
-export function hasFile(projectRoot, relPath) {
-  const parts = relPath.split('/');
-  parts.pop(); // filename
-  let node = projectRoot;
-  for (const seg of parts) {
-    node = node?.dirs?.[seg];
-    if (!node) return false;
-  }
-  return !!listFiles(node).find(f => f.relPath === relPath && isTS(f.ext));
-}
-
-export async function writeTextFile(dir, name, content) {
+async function writeTextFile(dir, name, content) {
   await mkdir(dir, { recursive: true });
-  await fsWriteFile(join(dir, name), content, 'utf8');
+  await writeFile(join(dir, name), content, 'utf8');
 }
 
+/**
+ * Écrit un index.ts par dossier (récursif).
+ * - Fichiers TS uniquement
+ * - list = { <fileName>: module, <subdir>: defaultExportDeSubdir }
+ * @param {object} opts
+ *  - node        : nœud d’arbre pour CE dossier
+ *  - outDir      : dossier de sortie (dans generate/…)
+ *  - sourceAlias : '@global' | '@locations'
+ *  - importBase  : chemin après l’alias pour CE dossier (ex: 'actions', 'bedroom/events', 'texts')
+ */
+export async function writeRecursiveIndex({ node, outDir, sourceAlias, importBase }) {
+  if (!node) return;
+
+  // 1) sous-dossiers d'abord
+  const subdirs = listDirs(node).sort();
+  for (const sub of subdirs) {
+    await writeRecursiveIndex({
+      node: node.dirs[sub],
+      outDir: join(outDir, sub),
+      sourceAlias,
+      importBase: `${importBase}/${sub}`,
+    });
+  }
+
+  // 2) fichiers TS du dossier courant
+  const files = listFiles(node)
+    .filter(f => isTS(f.ext))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const importLines = [];
+  const listLines = [];
+
+  // a) fichiers
+  files.forEach((f, i) => {
+    const v = `f${i}`;
+    const rel = f.name; // sans extension
+    importLines.push(`import ${v} from '${sourceAlias}/${importBase}/${rel}';`);
+    listLines.push(`  "${rel}": ${v}`);
+  });
+
+  // b) sous-dossiers (⚠️ ESM → ./sub/index.js)
+  subdirs.forEach((sub, i) => {
+    const id = `d${i}`;
+    importLines.push(`import ${id} from './${sub}/index.js';`);
+    listLines.push(`  "${sub}": ${id}`);
+  });
+
+  const content =
+    `// Generated index for: ${importBase}
+${importLines.join('\n')}
+
+export const list = {
+${listLines.join(',\n')}
+} as const;
+
+export default list;
+`;
+
+  await writeTextFile(outDir, 'index.ts', content);
+}

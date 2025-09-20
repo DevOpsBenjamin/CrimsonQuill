@@ -5,8 +5,9 @@ import { writeFile } from 'node:fs/promises';
 import { createTree } from './tree.js';
 import { writeTsconfig } from './tsconfig.js'
 import { writeEngine } from './engineTree.js'
-import { writeProjectData } from './projectTree.js'
 import { symbols } from '../utils/log.js'
+import { writeProjectData } from './projectTree.js'
+import { writeTextsData } from './textTree.js'
 
 export class ProjectGenerator {
   constructor(config = {}, verbose = false) {
@@ -41,5 +42,7 @@ export class ProjectGenerator {
     await writeEngine(this);
     // STEP 3 Project
     await writeProjectData(this);
+    // STEP 4 Texts 
+    await writeTextsData(this);
   }
 }

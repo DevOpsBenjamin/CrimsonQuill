@@ -26,7 +26,6 @@ export function buildFolderTree(folderPath) {
     return { files: [], dirs: {} };
   }
 
-  console.log(`buildFolderTree: ${folderPath}`)
   const entries = fg.sync(DEFAULT_PATTERNS, {
     cwd: folderPath,
     dot: false,
@@ -89,9 +88,6 @@ function resolvePluginSrcDir(pluginName, project_path) {
 
 // === createTree principal (inclut plugins npm du config) ===
 export function createTree(node_path, project_path, config = {}) {
-  console.log('[tree] node_path   =', node_path);
-  console.log('[tree] project_path=', project_path);
-
   const globalDir = join(project_path, 'global');
   const locationsDir = join(project_path, 'locations');
   const projectPluginsDir = join(project_path, 'plugins'); // plugins locaux du projet

@@ -28,6 +28,34 @@ export default list;
   await writeFile(join(outDir, 'index.ts'), content, 'utf8');
 }
 
+async function writeLocationKind(gen, locationId, kind) {
+  const node = gen?.last_tree?.locations?.dirs?.[locationId]?.dirs?.[kind];
+  if (!node) {
+    return;
+  }
+
+  await writeRecursiveIndex({
+    node,
+    outDir: join(gen.generate_dir, 'project', 'locations', locationId, kind),
+    sourceAlias: '@locations',
+    importBase: `${locationId}/${kind}`,
+  });
+}
+
+async function writeGlobalKind(gen, kind) {
+  const node = gen?.last_tree?.global?.dirs?.[kind];
+  if (!node) {
+    return;
+  }
+
+  await writeRecursiveIndex({
+    node,
+    outDir: join(gen.generate_dir, 'project', 'global', kind),
+    sourceAlias: '@global',
+    importBase: kind,
+  });
+}
+
 // --- writeEngine minuscule : orchestre seulement ---
 export async function writeProjectData(gen) {
   console.log(`${symbols.build}  Generate projet ...`);

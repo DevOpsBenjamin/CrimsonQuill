@@ -1,6 +1,6 @@
 import fg from 'fast-glob';
-import * as fse from 'fs-extra';
-import path from 'node:path';
+import { existsSync } from 'node:fs';
+import { join, posix as pathPosix } from 'node:path';
 
 const IMAGE_EXT = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'svg', 'ico', 'bmp', 'tiff', 'tif', 'dds', 'exr'];
 const AUDIO_EXT = ['mp3', 'ogg', 'flac', 'wav', 'm4a', 'opus', 'aac', 'mid', 'midi'];
@@ -22,10 +22,11 @@ const DEFAULT_IGNORE = [
 ];
 
 export function buildFolderTree(folderPath) {
-  if (!fse.pathExistsSync(folderPath)) {
+  if (!existsSync(folderPath)) {
     return { files: [], dirs: {} };
   }
 
+  console.log(`buildFolderTree: ${folderPath}`)
   const entries = fg.sync(DEFAULT_PATTERNS, {
     cwd: folderPath,
     dot: false,
@@ -55,7 +56,7 @@ export function createTreeFromPaths(relPaths) {
       node = node.dirs[seg];
     }
 
-    const ext = path.posix.extname(filename).toLowerCase();
+    const ext = pathPosix.extname(filename).toLowerCase();
     const name = ext ? filename.slice(0, -ext.length) : filename;
     const type = classifyByExt(ext);
 
@@ -83,11 +84,14 @@ function classifyByExt(ext) {
 // === Résolution ultra-simple du dossier src d’un plugin npm ===
 function resolvePluginSrcDir(pluginName, project_path) {
   const srcDir = join(project_path, 'node_modules', pluginName, 'src');
-  return fse.pathExistsSync(srcDir) ? srcDir : null; // si pas de src → on ignore
+  return existsSync(srcDir) ? srcDir : null; // si pas de src → on ignore
 }
 
 // === createTree principal (inclut plugins npm du config) ===
 export function createTree(node_path, project_path, config = {}) {
+  console.log('[tree] node_path   =', node_path);
+  console.log('[tree] project_path=', project_path);
+
   const globalDir = join(project_path, 'global');
   const locationsDir = join(project_path, 'locations');
   const projectPluginsDir = join(project_path, 'plugins'); // plugins locaux du projet

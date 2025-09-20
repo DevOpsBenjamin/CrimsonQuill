@@ -7,7 +7,7 @@ export default async function build({ args = [] }) {
   const ignoreTranslations = args && args.includes('/ignore-translations');
 
   try {
-    const config = loadConfig();
+    const config = await loadConfig();
     console.log(`Config DBG:${config}`)
     const generator = new ProjectGenerator(config, verbose);
 

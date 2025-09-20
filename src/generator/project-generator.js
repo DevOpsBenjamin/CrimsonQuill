@@ -1,6 +1,7 @@
 // ESM imports (built-in)
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, join } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { createTree } from './tree.js';
 import { symbols } from '../utils/log.js'
 

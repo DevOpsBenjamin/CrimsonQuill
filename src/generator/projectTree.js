@@ -8,13 +8,16 @@ async function writeLocalIndex({ label, outDir, dirs }) {
   await mkdir(outDir, { recursive: true });
 
   const importLines = dirs.map((name, idx) => `import d${idx} from './${name}/index.js';`);
-  const listLines = dirs.map((name, idx) => `  "${name}": d${idx}`);
+  const subLines = dirs.map((name, idx) => `    "${name}": d${idx}`);
+  const subBlock = subLines.length
+    ? `  sub: {\n${subLines.join(',\n')}\n  }`
+    : '  sub: {}';
 
   const content = `// Generated index for: ${label}
 ${importLines.join('\n')}
 
 export const list = {
-${listLines.join(',\n')}
+${subBlock}
 } as const;
 
 export default list;

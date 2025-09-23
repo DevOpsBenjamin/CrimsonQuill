@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@locations/*": ["./locations/*"],
+      "@global/*": ["./global/*"],
+      "@plugins/*": ["./plugins/*"],
+      "@generate/*": ["./generate/*"],
+      "@crimsonquill/engine_src/*": ["./node_modules/@crimsonquill/cli/engine_src/*"]
+    }
+  },
+  "include": ["locations", "global", "plugins", "config.ts"],
+  "exclude": ["node_modules", "dist", "generate"]
+}

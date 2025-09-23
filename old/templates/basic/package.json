@@ -1,0 +1,14 @@
+{
+  "name": "my-crimsonquill-game",
+  "displayName": "My CrimsonQuill Game",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "cq dev",
+    "build": "cq build",
+  },
+  "vuevn": {},
+  "dependencies": {},
+  "devDependencies": {}
+}
